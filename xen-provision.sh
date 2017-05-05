@@ -88,7 +88,7 @@ create() {
 	echo -e '[\033[00;32mOK\033[00;0m]'
 
 	printf "Changing $NAME bootflag from 'c' (iso) to 'd' (disk)..."
-	sed "s/boot='d'/boot='c'/" "$NAME.cfg" >> "$NAME.cfg"
+	sed "s/boot='d'/boot='c'/" "$NAME.cfg" > "$NAME.cfg"
 	echo -e '[\033[00;32mOK\033[00;0m]'
 
 	echo "$NAME created. Exiting..."
