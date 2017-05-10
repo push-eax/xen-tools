@@ -3,7 +3,7 @@
 VERSION="0.0.1"
 
 VERB="" # create or remove
-NAME="GUEST" # Guest name
+NAME="" # Guest name
 MEMORY="2048" # Guest memory in megabytes. 2048 by default
 CPUS="2" # Guest vCPUs. 2 by default
 SIZE="10240" # LVM volume size in megabytes. 10GB default
@@ -36,6 +36,9 @@ if [ $# -gt 1 ]; then
 
 		last=$i
 	done
+
+	# TODO: Check that -n and -p are passed. If not, show usage.
+
 else
 	echo "Too few arguments. Specify \"create\" or \"remove\"."
 	exit 1
@@ -46,6 +49,11 @@ type lvm >/dev/null 2>&1 || { echo >&2 "lvm not found. Aborting..."; exit 1; }
 
 
 create() {
+	if [ "$LVMPATH" != "" ]; then
+		echo "Volume $LVMPATH already exists. Aborting..."
+		exit 1
+	fi
+
 	printf "Creating LVM volume $NAME..."
 	lvcreate -n"$NAME" -L"$SIZE"M vg0 # TODO: change vg0 to dynamic volume group detection
 	if [ $? -eq 0 ]; then
@@ -56,7 +64,7 @@ create() {
 		exit 1;
 	fi
 
-	FULLPATH=$(readlink -f $ISOPATH)
+	FULLPATH=$(readlink -f $ISOPATH) 
 
 	printf "Creating LVM volume $NAME..."
 	echo -e "\tkernel = '/usr/lib/xen-4.0/boot/hvmloader'
@@ -84,12 +92,12 @@ create() {
 	fi
 
 	printf "Booting $NAME (10 seconds)..."
-	xl create "$NAME.cfg" > /dev/null
+	xl create "$NAME.cfg" > /dev/null 2>&1
 	sleep 10;
 	echo -e '[\033[00;32mOK\033[00;0m]'
 
-	printf "Changing $NAME bootflag from 'c' (iso) to 'd' (disk)..."
-	sed "s/boot='d'/boot='c'/" "$NAME.cfg" > "$NAME.cfg"
+	printf "Changing $NAME bootflag from 'd' (iso) to 'c' (disk)..."
+	sed -i "10s/d/c/" $NAME.cfg
 	echo -e '[\033[00;32mOK\033[00;0m]'
 
 	echo "$NAME created. Exiting..."
@@ -104,7 +112,7 @@ remove() {
 	fi
 
 	printf "Removing $LVMPATH..."
-	lvremove $LVMPATH
+	lvremove $LVMPATH -f
 	if [ $? -eq 0 ]; then
                 echo -e '[\033[00;32mOK\033[00;0m]'
         else
@@ -112,20 +120,21 @@ remove() {
 		echo "$LVMPATH could not be removed. Aborting..."
 		exit 1;
         fi
+
         printf "Removing $NAME.cfg..."
         rm $NAME.cfg
         if [ $? -eq 0 ]; then
                 echo -e '[\033[00;32mOK\033[00;0m]'
         else
                 echo -e '[\033[00;32mFAIL\033[00;0m]' # TODO: change FAIL colors to red
-                echo "$NAME.cfg could not be removed. Aborting.$
+                echo "$NAME.cfg could not be removed. Aborting..."
                 exit 1;
         fi
 }
 
 
 printf "Checking for guest LVM volume..."
-LVMPATH=`lvdisplay | grep $NAME | grep "Path"`
+LVMPATH=$(lvdisplay | grep $NAME | grep "Path")
 LVMPATH=${LVMPATH:25} # magic number for trimming lvdisplay output. TODO: use awk
 
 # TODO: check if LVMPATH returned a volume, print OK or FAIL depending on $VERB
@@ -133,7 +142,7 @@ echo -e '[\033[00;32mOK\033[00;0m]'
 #echo "Found LVM volume $LVMPATH."
 
 printf "Checking for $NAME in xl..."
-XENGUEST=`xl list | grep $NAME`
+XENGUEST=$(xl list | grep $NAME)
 # TODO: check if guest exists, print OK or FAIL depending on $VERB
 
 echo -e '[\033[00;32mOK\033[00;0m]'
@@ -153,10 +162,12 @@ echo -e '[\033[00;32mOK\033[00;0m]'
 #echo "$LVMPATH"
 #echo "$NAME"
 
-if [ "$LVMPATH" != "" ]; then 
-	[[ $VERB = "create" ]] || $VERB # call create()
-else [[ $VERB = "remove" ]] || $VERB # call remove()
-fi
+#if [ "$LVMPATH" != "" ]; then 
+#	[[ $VERB = "create" ]] || $VERB # call create()
+#else [[ $VERB = "remove" ]] || $VERB # call remove()
+#fi
+
+$VERB # call create() or remove()
 
 echo "Finished."
 # TODO: if verb = create, echo $NAME created. else, echo $NAME removed.
