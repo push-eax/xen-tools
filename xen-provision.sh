@@ -13,7 +13,7 @@ echo `basename "$0"`
 echo -e "v$VERSION\n"
 
 # Parse command line arguments
-if [ $# -gt 1 ]; then
+if [ $# -gt 2 ]; then
 	# TODO: Check for ISOPATH, fail if not given
 	if [ $1 = "create" ] || [ $1 = "remove" ]; then
                 VERB=$1
@@ -22,31 +22,41 @@ if [ $# -gt 1 ]; then
 		exit 1
 	fi
 
+	NAME=$2
+
 	last=""
 
 	for i in $@;
 	do
 		case $last in
-			-n|--name)	NAME=$i;;
 			-m|--memory)	MEMORY=$i;;
 			-c|--cpus)	CPUS=$i;;
 			-s|--size)	SIZE=$i;;
 			-p|--path)	ISOPATH=$i;;
+			-h|--help)	printusage();;
 		esac
 
 		last=$i
 	done
 
-	# TODO: Check that -n and -p are passed. If not, show usage.
+	if [ $VERB = "create" ] && [ $ISOPATH = "" ]; then
+		echo "Specify path to ISO using -p."
+	fi
+
 
 else
-	echo "Too few arguments. Specify \"create\" or \"remove\"."
+	echo "Too few arguments. See --help."
 	exit 1
 fi
 
 type xm >/dev/null 2>&1 || type xl >/dev/null 2>&1 || { echo >&2 "Xen administration tools not found. Aborting..."; exit 1; }
 type lvm >/dev/null 2>&1 || { echo >&2 "lvm not found. Aborting..."; exit 1; }
 
+printusage() {
+	# TODO: write --help
+	echo "USAGE"
+	exit 0;
+}
 
 create() {
 	if [ "$LVMPATH" != "" ]; then
