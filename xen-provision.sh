@@ -73,7 +73,8 @@ create() {
 	serial='pty'
 	vnc=1
 	vnclisten=''
-	vncpasswd=''" >> "$NAME.cfg"
+	vncpasswd=''
+	usbdevice='tablet'" >> "$NAME.cfg"
 	if [ $? -eq 0 ]; then
 		echo -e '[\033[00;32mOK\033[00;0m]'
 	else
