@@ -33,13 +33,13 @@ if [ $# -gt 2 ]; then
 			-c|--cpus)	CPUS=$i;;
 			-s|--size)	SIZE=$i;;
 			-p|--path)	ISOPATH=$i;;
-			-h|--help)	printusage();;
+			-h|--help)	printusage;;
 		esac
 
 		last=$i
 	done
 
-	if [ $VERB = "create" ] && [ $ISOPATH = "" ]; then
+	if [ "$VERB" = "create" ] && [ "$ISOPATH" = "" ]; then
 		echo "Specify path to ISO using -p."
 	fi
 
