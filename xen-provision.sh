@@ -112,8 +112,15 @@ remove() {
 		echo "$LVMPATH could not be removed. Aborting..."
 		exit 1;
         fi
-
-	echo "$NAME removed. Don't forget to delete $NAME.cfg!"
+        printf "Removing $NAME.cfg..."
+        rm $NAME.cfg
+        if [ $? -eq 0 ]; then
+                echo -e '[\033[00;32mOK\033[00;0m]'
+        else
+                echo -e '[\033[00;32mFAIL\033[00;0m]' # TODO: change FAIL colors to red
+                echo "$NAME.cfg could not be removed. Aborting.$
+                exit 1;
+        fi
 }
 
 
