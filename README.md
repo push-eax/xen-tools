@@ -1,7 +1,7 @@
 # xen-tools
 A collection of scripts designed to automate some Xen-related tasks.
 
-xen-provision.sh
+## xen-provision.sh
 
 A script that can either create or remove HVM guests. The script was written using the Xen Project [Beginner's Guide](https://wiki.xenproject.org/wiki/Xen_Project_Beginners_Guide).
 
